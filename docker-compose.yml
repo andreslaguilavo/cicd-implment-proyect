@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: cicd_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: appdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
+    # Si tienes ocupado el 3306 en Windows, expón 3307
+    ports:
+      - "3307:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-prootpass"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    container_name: cicd_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      DB_USER: appuser
+      DB_PASSWORD: apppass
+      DB_HOST: db
+      DB_NAME: appdb
+      SQLALCHEMY_DATABASE_URI: "mysql+mysqlconnector://appuser:apppass@db:3306/appdb"
+      SQLALCHEMY_TRACK_MODIFICATIONS: "False"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  dbdata:
