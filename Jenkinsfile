@@ -1,11 +1,11 @@
 pipeline {
     agent any
-    
+
     environment {
-        DOCKER_IMAGE = 'cicd-app'
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        // por si quieres usarlo en algún paso
+        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
@@ -13,55 +13,55 @@ pipeline {
                 checkout scm
             }
         }
-        
-        stage('Build Docker Image') {
+
+        stage('Build de la imagen de la app') {
             steps {
-                echo 'Construyendo imagen Docker...'
-                script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
-                    docker.build("${DOCKER_IMAGE}:latest")
-                }
-            }
-        }
-         
-        stage('Deploy with Docker Compose') {
-            steps {
-                echo 'Desplegando app y base de datos...'
-                script {
-                    sh '''
-                        # Forzar eliminación de contenedores existentes
-                        docker stop cicd_app cicd_db 2>/dev/null || true
-                        docker rm -f cicd_app cicd_db 2>/dev/null || true
-                        
-                        # Levantar solo app y db
-                        docker compose up -d --build app db
-                    '''
-                }
-            }
-        }
-        
-        stage('Health Check') {
-            steps {
-                echo 'Verificando que la app responde...'
+                echo 'Construyendo imagen Docker de la aplicación...'
                 sh '''
-                    sleep 15
-                    curl -f http://app:5000/health || exit 1
+                    docker compose -f ${DOCKER_COMPOSE_FILE} build app
                 '''
             }
         }
 
+        stage('Deploy con Docker Compose') {
+            steps {
+                echo 'Levantando contenedores de DB y App...'
+                sh '''
+                    docker compose -f ${DOCKER_COMPOSE_FILE} up -d db app
+                    echo "Estado de los contenedores:"
+                    docker compose -f ${DOCKER_COMPOSE_FILE} ps
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo 'Verificando que la app responde en /health...'
+                sh '''
+                    echo "Esperando 15 segundos a que la app termine de arrancar..."
+                    sleep 15
+
+                    echo "Haciendo curl a http://cicd_app:5000/health"
+                    curl -f http://cicd_app:5000/health || (echo "Healthcheck falló" && docker compose -f ${DOCKER_COMPOSE_FILE} logs app && exit 1)
+                '''
+            }
+        }
     }
-    
+
     post {
         success {
-            echo 'Pipeline ejecutado exitosamente!'
+            echo '✅ Pipeline ejecutado exitosamente!'
         }
         failure {
-            echo 'Pipeline falló. Revisa los logs.'
-            sh 'docker compose logs app || true'
+            echo '❌ Pipeline falló. Revisa los logs de Docker Compose.'
+            // Esto ayuda a ver qué pasó con la app
+            sh '''
+                docker compose -f ${DOCKER_COMPOSE_FILE} ps || true
+                docker compose -f ${DOCKER_COMPOSE_FILE} logs app || true
+            '''
         }
         always {
-            echo 'Limpiando recursos...'
+            echo 'Limpieza ligera de recursos (imágenes/contendores colgados)...'
             sh 'docker system prune -f || true'
         }
     }
