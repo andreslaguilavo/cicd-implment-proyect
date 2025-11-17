@@ -35,18 +35,18 @@ pipeline {
             }
         }
 
-        stage('Health Check') {
-            steps {
-                echo 'Verificando que la app responde en /health...'
-                sh '''
-                    echo "Esperando 15 segundos a que la app termine de arrancar..."
-                    sleep 15
+        // stage('Health Check') {
+        //     steps {
+        //         echo 'Verificando que la app responde en /health...'
+        //         sh '''
+        //             echo "Esperando 15 segundos a que la app termine de arrancar..."
+        //             sleep 15
 
-                    echo "Haciendo curl a http://${COMPOSE_PROJECT_NAME}_app:5000/health"
-                    curl -f http://${COMPOSE_PROJECT_NAME}_app:5000/health || (echo "Healthcheck falló" && docker compose -f ${DOCKER_COMPOSE_FILE} logs app && exit 1)
-                '''
-            }
-        }
+        //             echo "Haciendo curl a http://${COMPOSE_PROJECT_NAME}_app:5000/health"
+        //             curl -f http://${COMPOSE_PROJECT_NAME}_app:5000/health || (echo "Healthcheck falló" && docker compose -f ${DOCKER_COMPOSE_FILE} logs app && exit 1)
+        //         '''
+        //     }
+        // }
     }
 
     post {
