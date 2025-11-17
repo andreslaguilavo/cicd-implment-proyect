@@ -17,6 +17,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - cicd_net
 
   app:
     build: .
@@ -34,6 +36,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - cicd_net
 
   jenkins:
     build:
@@ -49,7 +53,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
+    networks:
+      - cicd_net
 
+networks:
+  cicd_net:
+    driver: bridge
 volumes:
   dbdata:
   jenkins_home:
