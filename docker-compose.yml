@@ -8,7 +8,6 @@ services:
       MYSQL_DATABASE: appdb
       MYSQL_USER: appuser
       MYSQL_PASSWORD: apppass
-    # Si tienes ocupado el 3306 en Windows, expón 3307
     ports:
       - "3307:3306"
     volumes:
@@ -36,5 +35,17 @@ services:
       db:
         condition: service_healthy
 
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: cicd_jenkins
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
 volumes:
   dbdata:
+  jenkins_home:
