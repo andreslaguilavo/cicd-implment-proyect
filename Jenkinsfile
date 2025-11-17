@@ -54,7 +54,7 @@ pipeline {
                 echo 'Verificando que la app responde...'
                 script {
                     sleep(time: 15, unit: 'SECONDS')
-                    sh 'curl -f http://localhost:5000/health || exit 1'
+                    sh 'curl -f http://cicd_app:5000/health || exit 1'
                 }
             }
         }
