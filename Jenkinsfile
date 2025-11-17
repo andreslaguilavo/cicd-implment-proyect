@@ -23,16 +23,7 @@ pipeline {
                 }
             }
         }
-        
-        // stage('Test') {
-        //     steps {
-        //         echo 'Ejecutando tests básicos...'
-        //         script {
-        //             sh "docker images | grep ${DOCKER_IMAGE}"
-        //         }
-        //     }
-        // }
-        
+         
         stage('Deploy with Docker Compose') {
             steps {
                 echo 'Desplegando app y base de datos...'
