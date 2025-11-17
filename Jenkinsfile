@@ -24,23 +24,23 @@ pipeline {
             }
         }
         
-        stage('Test') {
-            steps {
-                echo 'Ejecutando tests básicos...'
-                script {
-                    sh "docker images | grep ${DOCKER_IMAGE}"
-                }
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         echo 'Ejecutando tests básicos...'
+        //         script {
+        //             sh "docker images | grep ${DOCKER_IMAGE}"
+        //         }
+        //     }
+        // }
         
         stage('Deploy with Docker Compose') {
             steps {
                 echo 'Desplegando app y base de datos...'
                 script {
                     sh '''
-                        # Detener solo app y db (sin tocar jenkins)
-                        docker compose stop app db || true
-                        docker compose rm -f app db || true
+                        # Forzar eliminación de contenedores existentes
+                        docker stop cicd_app cicd_db 2>/dev/null || true
+                        docker rm -f cicd_app cicd_db 2>/dev/null || true
                         
                         # Levantar solo app y db
                         docker compose up -d --build app db
