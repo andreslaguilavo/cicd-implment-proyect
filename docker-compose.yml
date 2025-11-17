@@ -19,6 +19,7 @@ services:
       retries: 10
     networks:
       - cicd_net
+      - integracion_continua_net
 
   app:
     build: .
@@ -38,6 +39,8 @@ services:
         condition: service_healthy
     networks:
       - cicd_net
+      - integracion_continua_net
+
 
   jenkins:
     build:
@@ -55,10 +58,13 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
     networks:
       - cicd_net
+      - integracion_continua_net
 
 networks:
   cicd_net:
     driver: bridge
+  integracion_continua_net:
+    external: true
 volumes:
   dbdata:
   jenkins_home:

@@ -52,12 +52,13 @@ pipeline {
         stage('Health Check') {
             steps {
                 echo 'Verificando que la app responde...'
-                script {
-                    sleep(time: 15, unit: 'SECONDS')
-                    sh 'curl -f http://cicd_app:5000/health || exit 1'
-                }
+                sh '''
+                    sleep 15
+                    curl -f http://app:5000/health || exit 1
+                '''
             }
         }
+
     }
     
     post {
