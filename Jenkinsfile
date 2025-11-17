@@ -28,7 +28,6 @@ pipeline {
             steps {
                 echo 'Ejecutando tests básicos...'
                 script {
-                    // Verifica que la imagen se construyó correctamente
                     sh "docker images | grep ${DOCKER_IMAGE}"
                 }
             }
@@ -36,10 +35,16 @@ pipeline {
         
         stage('Deploy with Docker Compose') {
             steps {
-                echo 'Desplegando con Docker Compose...'
+                echo 'Desplegando app y base de datos...'
                 script {
-                    sh 'docker compose down || true'
-                    sh 'docker compose up -d --build'
+                    sh '''
+                        # Detener solo app y db (sin tocar jenkins)
+                        docker compose stop app db || true
+                        docker compose rm -f app db || true
+                        
+                        # Levantar solo app y db
+                        docker compose up -d --build app db
+                    '''
                 }
             }
         }
@@ -48,7 +53,7 @@ pipeline {
             steps {
                 echo 'Verificando que la app responde...'
                 script {
-                    sleep(time: 10, unit: 'SECONDS')
+                    sleep(time: 15, unit: 'SECONDS')
                     sh 'curl -f http://localhost:5000/health || exit 1'
                 }
             }
@@ -61,11 +66,11 @@ pipeline {
         }
         failure {
             echo 'Pipeline falló. Revisa los logs.'
-            sh 'docker compose logs app'
+            sh 'docker compose logs app || true'
         }
         always {
             echo 'Limpiando recursos...'
-            sh 'docker system prune -f'
+            sh 'docker system prune -f || true'
         }
     }
 }

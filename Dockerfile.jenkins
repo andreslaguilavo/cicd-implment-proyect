@@ -1,0 +1,15 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Instala Docker CLI y curl
+RUN apt-get update && \
+    apt-get install -y docker.io curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Instala Docker Compose v2 como plugin
+RUN mkdir -p /usr/local/lib/docker/cli-plugins && \
+    curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+USER jenkins
