@@ -5,6 +5,7 @@ from model.db import db
 
 pedido_api = Blueprint('pedido_api', __name__)
 
+
 @pedido_api.route('/pedidos', methods=['POST'])
 def create_pedido():
     data = request.get_json(force=True, silent=True) or {}
@@ -12,12 +13,15 @@ def create_pedido():
     producto_ids = data.get("producto_ids", [])
     if not cliente_id:
         return jsonify({"error": "cliente_id es obligatorio"}), 400
-    productos = Producto.query.filter(Producto.id.in_(producto_ids)).all() if producto_ids else []
+    productos = Producto.query.filter(Producto.id.in_(
+        producto_ids)).all() if producto_ids else []
     total = sum(p.precio for p in productos)
-    ped = Pedido(cliente_id=cliente_id, productos=productos, total=total)
+    ped = Pedido(cliente_id=cliente_id, total=total)
+    ped.productos = productos
     db.session.add(ped)
     db.session.commit()
     return jsonify({"mensaje": "Pedido creado", "id": ped.id, "total": ped.total}), 201
+
 
 @pedido_api.route('/pedidos', methods=['GET'])
 def get_pedidos():
@@ -32,6 +36,13 @@ def get_pedidos():
         for p in pedidos
     ])
 
+
+@pedido_api.route('/pedidos/<int:id>', methods=['GET'])
+def get_pedido(id):
+    p = Pedido.query.get_or_404(id)
+    return jsonify(p.to_dict())
+
+
 @pedido_api.route('/pedidos/<int:id>', methods=['PUT'])
 def update_pedido(id):
     ped = Pedido.query.get_or_404(id)
@@ -39,11 +50,13 @@ def update_pedido(id):
     if "cliente_id" in data:
         ped.cliente_id = data["cliente_id"]
     if "producto_ids" in data:
-        productos = Producto.query.filter(Producto.id.in_(data["producto_ids"])).all()
+        productos = Producto.query.filter(
+            Producto.id.in_(data["producto_ids"])).all()
         ped.productos = productos
         ped.total = sum(pr.precio for pr in productos)
     db.session.commit()
     return jsonify({"mensaje": "Pedido actualizado"})
+
 
 @pedido_api.route('/pedidos/<int:id>', methods=['DELETE'])
 def delete_pedido(id):

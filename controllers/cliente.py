@@ -4,18 +4,19 @@ from model.db import db
 
 cliente_api = Blueprint('cliente_api', __name__)
 
+
 @cliente_api.route('/clientes', methods=['POST'])
 def create_cliente():
     data = request.get_json(force=True, silent=True) or {}
-    cid = data.get("id")
     nombre = data.get("nombre")
     email = data.get("email")
-    if not cid or not nombre:
-        return jsonify({"error": "id y nombre son obligatorios"}), 400
-    c = Cliente(id=cid, nombre=nombre, email=email)
+    if not nombre:
+        return jsonify({"error": "nombre es obligatorio"}), 400
+    c = Cliente(nombre=nombre, email=email)
     db.session.add(c)
     db.session.commit()
     return jsonify({"mensaje": "Cliente creado", "id": c.id}), 201
+
 
 @cliente_api.route('/clientes', methods=['GET'])
 def get_clientes():
@@ -25,7 +26,16 @@ def get_clientes():
         for c in clientes
     ])
 
-@cliente_api.route('/clientes/<string:id>', methods=['PUT'])
+# GET single cliente (int id)
+
+
+@cliente_api.route('/clientes/<int:id>', methods=['GET'])
+def get_cliente(id):
+    c = Cliente.query.get_or_404(id)
+    return jsonify(c.to_dict())
+
+
+@cliente_api.route('/clientes/<int:id>', methods=['PUT'])
 def update_cliente(id):
     c = Cliente.query.get_or_404(id)
     data = request.get_json(force=True, silent=True) or {}
@@ -34,7 +44,8 @@ def update_cliente(id):
     db.session.commit()
     return jsonify({"mensaje": "Cliente actualizado"})
 
-@cliente_api.route('/clientes/<string:id>', methods=['DELETE'])
+
+@cliente_api.route('/clientes/<int:id>', methods=['DELETE'])
 def delete_cliente(id):
     c = Cliente.query.get_or_404(id)
     db.session.delete(c)
