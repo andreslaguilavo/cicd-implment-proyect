@@ -23,32 +23,32 @@ pipeline {
         }
 
         stage('Tests & Coverage') {
-            steps {
-                echo '🧪 Ejecutando tests con pytest y subiendo cobertura a Codecov...'
-                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
-                    sh '''
-                        # Nos aseguramos de estar en el workspace correcto
-                        cd $WORKSPACE
-
-                        echo "Contenido de $PWD:"
-                        ls
-                        echo "\\nContenido de tests/:"
-                        ls tests || echo "⚠️ NO existe la carpeta tests"
-
-                        # Ejecutar tests con cobertura
-                        pytest --cov=. --cov-report=xml:coverage.xml
-
-                        echo "\\nArchivo coverage.xml generado:"
-                        ls -l coverage.xml || echo "⚠️ NO existe coverage.xml"
-
-                        # Descargar y ejecutar el uploader de Codecov
-                        curl -s https://uploader.codecov.io/latest/linux/codecov -o codecov
-                        chmod +x codecov
+    steps {
+        echo '🧪 Ejecutando tests dentro de la imagen de la app y subiendo cobertura a Codecov...'
+        withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+            sh '''
+                docker run --rm \
+                    -v $PWD:/app \
+                    -w /app \
+                    integracion-continua-app sh -c "
+                        echo 'Contenido de /app:' &&
+                        ls &&
+                        echo '\\nContenido de tests/:' &&
+                        ls tests || echo '⚠️ NO existe la carpeta tests' &&
+                        echo '\\nEjecutando pytest...' &&
+                        pytest --cov=. --cov-report=xml:coverage.xml &&
+                        echo '\\nArchivo coverage.xml generado:' &&
+                        ls -l coverage.xml &&
+                        echo '\\nSubiendo reporte a Codecov...' &&
+                        curl -s https://uploader.codecov.io/latest/linux/codecov -o codecov &&
+                        chmod +x codecov &&
                         ./codecov -t $CODECOV_TOKEN -f coverage.xml
-                    '''
-                }
-            }
+                    "
+            '''
         }
+    }
+}
+
 
 
 
