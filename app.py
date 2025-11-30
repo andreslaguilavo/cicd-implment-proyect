@@ -1,14 +1,13 @@
 import os
 from flask import Flask, jsonify
+from dotenv import load_dotenv
 from model.db import db
+load_dotenv()
+
 
 def _database_url_from_env():
-    # Prefer DATABASE_URL, then SQLALCHEMY_DATABASE_URI, else default for docker-compose
-    return (
-        os.getenv("DATABASE_URL")
-        or os.getenv("SQLALCHEMY_DATABASE_URI")
-        or "mysql+mysqlconnector://appuser:apppass@db:3306/appdb"
-    )
+    return os.getenv("SQLALCHEMY_DATABASE_URI")
+
 
 def create_app():
     app = Flask(__name__)
@@ -30,6 +29,12 @@ def create_app():
     # Register blueprints
     from controllers.producto import api as producto_api
     app.register_blueprint(producto_api, url_prefix="/api")
+
+    from controllers.cliente import cliente_api
+    app.register_blueprint(cliente_api, url_prefix="/api")
+
+    from controllers.pedido import pedido_api
+    app.register_blueprint(pedido_api, url_prefix="/api")
 
     @app.get("/health")
     def health():
