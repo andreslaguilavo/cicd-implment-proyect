@@ -67,4 +67,4 @@ networks:
 
 volumes:
   dbdata:
-  # jenkins_home:
+  jenkins_home:
