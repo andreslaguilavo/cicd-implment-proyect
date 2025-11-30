@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // por si quieres usarlo en algún paso
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
     }
 
@@ -20,6 +19,22 @@ pipeline {
                 sh '''
                     docker compose -f ${DOCKER_COMPOSE_FILE} build app
                 '''
+            }
+        }
+
+        stage('Tests & Coverage') {
+            steps {
+                echo 'Ejecutando tests con pytest y subiendo cobertura a Codecov...'
+                withCredentials([string(credentialsId: 'codecov-token', variable: 'CODECOV_TOKEN')]) {
+                    sh '''
+                        docker compose -f ${DOCKER_COMPOSE_FILE} run --rm app sh -c "
+                            pytest --cov=. --cov-report=xml:coverage.xml &&
+                            curl -s https://uploader.codecov.io/latest/linux/codecov -o codecov &&
+                            chmod +x codecov &&
+                            ./codecov -t $CODECOV_TOKEN -f coverage.xml
+                        "
+                    '''
+                }
             }
         }
 
@@ -54,7 +69,6 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline falló. Revisa los logs de Docker Compose.'
-            // Esto ayuda a ver qué pasó con la app
             sh '''
                 docker compose -f ${DOCKER_COMPOSE_FILE} ps || true
                 docker compose -f ${DOCKER_COMPOSE_FILE} logs app || true
