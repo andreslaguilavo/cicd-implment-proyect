@@ -22,14 +22,12 @@ pipeline {
             }
         }
 
-        stage('Tests & Coverage') {
+      stage('Tests & Coverage') {
     steps {
         echo '🧪 Ejecutando tests dentro de la imagen de la app y subiendo cobertura a Codecov...'
         withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
             sh '''
                 docker run --rm \
-                    -v $PWD:/app \
-                    -w /app \
                     integracion-continua-app sh -c "
                         echo 'Contenido de /app:' &&
                         ls &&
@@ -48,6 +46,7 @@ pipeline {
         }
     }
 }
+
 
 
 
