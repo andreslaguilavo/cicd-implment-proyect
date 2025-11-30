@@ -22,21 +22,25 @@ pipeline {
             }
         }
 
-        stage('Tests & Coverage') {
+       stage('Tests & Coverage') {
             steps {
-                echo 'Ejecutando tests con pytest y subiendo cobertura a Codecov...'
-                    withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+                echo '🧪 Ejecutando tests con pytest y subiendo cobertura a Codecov...'
+                withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
                     sh '''
-                        docker compose -f ${DOCKER_COMPOSE_FILE} run --rm app sh -c "
-                            pytest --cov=. --cov-report=xml:coverage.xml &&
-                            curl -s https://uploader.codecov.io/latest/linux/codecov -o codecov &&
-                            chmod +x codecov &&
-                            ./codecov -t $CODECOV_TOKEN -f coverage.xml
-                        "
+                        docker run --rm \
+                            -v $PWD:/app \
+                            -w /app \
+                            integracion-continua-app sh -c "
+                                pytest --cov=. --cov-report=xml:coverage.xml &&
+                                curl -s https://uploader.codecov.io/latest/linux/codecov -o codecov &&
+                                chmod +x codecov &&
+                                ./codecov -t $CODECOV_TOKEN -f coverage.xml
+                            "
                     '''
                 }
             }
         }
+
 
         stage('Deploy con Docker Compose') {
             steps {
