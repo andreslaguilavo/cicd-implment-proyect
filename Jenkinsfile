@@ -4,7 +4,6 @@ pipeline {
     environment {
         // por si quieres usarlo en algún paso
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
-        COMPOSE_PROJECT_NAME = 'cicd'
     }
 
     stages {
@@ -28,25 +27,25 @@ pipeline {
             steps {
                 echo 'Levantando contenedores de DB y App...'
                 sh '''
-                    docker compose -p ${COMPOSE_PROJECT_NAME} -f ${DOCKER_COMPOSE_FILE} up -d db app
+                    docker compose -f ${DOCKER_COMPOSE_FILE} up -d db app
                     echo "Estado de los contenedores:"
                     docker compose -f ${DOCKER_COMPOSE_FILE} ps
                 '''
             }
         }
 
-        // stage('Health Check') {
-        //     steps {
-        //         echo 'Verificando que la app responde en /health...'
-        //         sh '''
-        //             echo "Esperando 15 segundos a que la app termine de arrancar..."
-        //             sleep 15
+        stage('Health Check') {
+            steps {
+                echo 'Verificando que la app responde en /health...'
+                sh '''
+                    echo "Esperando 15 segundos a que la app termine de arrancar..."
+                    sleep 15
 
-        //             echo "Haciendo curl a http://${COMPOSE_PROJECT_NAME}_app:5000/health"
-        //             curl -f http://${COMPOSE_PROJECT_NAME}_app:5000/health || (echo "Healthcheck falló" && docker compose -f ${DOCKER_COMPOSE_FILE} logs app && exit 1)
-        //         '''
-        //     }
-        // }
+                    echo "Haciendo curl a http://cicd_app:5000/health"
+                    curl -f http://cicd_app:5000/health || (echo "Healthcheck falló" && docker compose -f ${DOCKER_COMPOSE_FILE} logs app && exit 1)
+                '''
+            }
+        }
     }
 
     post {
