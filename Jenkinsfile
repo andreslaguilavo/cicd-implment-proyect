@@ -25,7 +25,7 @@ pipeline {
         stage('Tests & Coverage') {
             steps {
                 echo 'Ejecutando tests con pytest y subiendo cobertura a Codecov...'
-                withCredentials([string(credentialsId: 'codecov-token', variable: 'CODECOV_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
                     sh '''
                         docker compose -f ${DOCKER_COMPOSE_FILE} run --rm app sh -c "
                             pytest --cov=. --cov-report=xml:coverage.xml &&
