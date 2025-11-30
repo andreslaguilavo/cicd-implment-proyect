@@ -1,15 +1,16 @@
-from app import create_app
-from model.db import db
 import os
 import pytest
 from dotenv import load_dotenv
 import sys
 from pathlib import Path
-
 # Ensure repo root is on sys.path so packages like 'model' can be imported
-# ROOT = Path(__file__).resolve().parents[1]
-# if str(ROOT) not in sys.path:
-#     sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from model.db import db
+from app import create_app
+
 
 load_dotenv()  # ensure .env variables are loaded
 

@@ -2,10 +2,13 @@
 FROM python:3.11-slim
 
 # Prevents Python from writing .pyc files and enables output flushing
-ENV PYTHONDONTWRITEBYTECODE=1         PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# System deps (gcc for mysql-connector if needed)
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
+# System deps (gcc for mysql-connector if needed) + curl para Codecov
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential curl && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
