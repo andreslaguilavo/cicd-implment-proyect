@@ -22,30 +22,35 @@ pipeline {
             }
         }
 
-      stage('Tests & Coverage') {
+     stage('Tests & Coverage') {
     steps {
         echo '🧪 Ejecutando tests dentro de la imagen de la app y subiendo cobertura a Codecov...'
         withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
             sh '''
+                echo "GIT_COMMIT: $GIT_COMMIT"
+                echo "GIT_BRANCH: $GIT_BRANCH"
+
                 docker run --rm \
-                    integracion-continua-app sh -C "
-                        echo 'Contenido de /app:' &&
-                        ls &&
-                        echo '\\nContenido de tests/:' &&
-                        ls tests || echo '⚠️ NO existe la carpeta tests' &&
-                        echo '\\nEjecutando pytest...' &&
+                    -e CODECOV_TOKEN=$CODECOV_TOKEN \
+                    -e GIT_COMMIT=$GIT_COMMIT \
+                    -e GIT_BRANCH=$GIT_BRANCH \
+                    integracion-continua-app sh -c "
                         pytest --cov=. --cov-report=xml:coverage.xml &&
-                        echo '\\nArchivo coverage.xml generado:' &&
-                        ls -l coverage.xml &&
-                        echo '\\nSubiendo reporte a Codecov...' &&
                         curl -s https://uploader.codecov.io/latest/linux/codecov -o codecov &&
                         chmod +x codecov &&
-                        ./codecov -t $CODECOV_TOKEN -f coverage.xml
+                        ./codecov \
+                            -t $CODECOV_TOKEN \
+                            -f coverage.xml \
+                            -R /app \
+                            -C $GIT_COMMIT \
+                            -B $GIT_BRANCH \
+                            -r andreslaguilavo/cicd-implment-proyect
                     "
             '''
         }
     }
 }
+
 
 
 
