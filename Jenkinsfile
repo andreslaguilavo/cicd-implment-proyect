@@ -28,7 +28,7 @@ pipeline {
         withCredentials([string(credentialsId: 'CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
             sh '''
                 docker run --rm \
-                    integracion-continua-app sh -c "
+                    integracion-continua-app sh -C "
                         echo 'Contenido de /app:' &&
                         ls &&
                         echo '\\nContenido de tests/:' &&
